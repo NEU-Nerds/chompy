@@ -86,4 +86,6 @@ def etaGraph(node, evens):
 	for child in children:
 		if str(child) in evens:
 			return 1
+		elif str(util.mirror(child)) in evens:
+			return 1
 	return 0

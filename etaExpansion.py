@@ -24,7 +24,7 @@ etaData = {N : eta(N)}
 workingNodes = [n-1,[(g,eta(g)), ]]
 """
 
-MAX_SIZE = 4
+MAX_SIZE = 8
 
 def main():
 	print("Loading Initial Data")
@@ -64,12 +64,12 @@ def expandLCentric(n, evens):
 		pass
 
 	#For each l in L
-	print("n: " + str(n))
+	# print("n: " + str(n))
 	for i in reversed(range(1, n+1)):
 		#reversed(range(1, min(i,n-1)+1)):
 		for j in reversed(range(1, min(i,n-1)+1)):
 			l = [i,j]
-			print("l: " + str(l))
+			# print("l: " + str(l))
 
 			newEtaData = []
 
@@ -83,17 +83,22 @@ def expandLCentric(n, evens):
 			"""
 
 			#f = InvFile, r = InvRank
-			for f in range(n-i, n):
-				for r in range(n-j, f+1):
+			for r in range(n-j, n):
+				for f in range(n-i, r+1):
 
-					print("f: " + str(f) + "\tr: " + str(r))
+
+					# print("f: " + str(f) + "\tr: " + str(r))
+					#if inverseForR is maxed then only empty board as G which is in FmaxRmax
 					if f == n-1 or r == n-1:
 						g = util.genBoard(n-1)
+						# print(g)
 						newEtaData.append(etaLG(l, g, n, evens))
-						util.store(newEtaData, newDir / ("f="+str(n-i)+"_r="+str(n-j)+".dat") )
-						# continue
+						# print(newEtaData)
+						#util.store(newEtaData, newDir / ("f="+str(n-1)+"_r="+str(n-1)+".dat") )
+						continue
 
 					G = util.load(prevDir / ("f="+str(f)+"_r="+str(r)+".dat"))
+					# print("G: " + str(G))
 					G.sort(key = lambda x: unbittenA(x[0]))
 					for g in G:
 						newEtaData.append(etaLG(l, g[0], n, evens))
@@ -111,7 +116,7 @@ def expandLCentric(n, evens):
 
 def unbittenA(b):
 	sum = 0
-	print(b)
+	# print(b)
 	for i in range(len(b)):
 		sum += (i+2)*b[i][0] + (i+2)*b[i][1]
 		if b[i][0] > 0 and b[i][1] > 0:
@@ -121,16 +126,18 @@ def unbittenA(b):
 def etaLG(l, g, n, evens):
 	num = eta.eta(g, l, n, evens)
 	node = g + [l]
-	print("node: " + str(node))
+	# print("node: " + str(node))
 	if num % 2 == 0:
 		evens.add(str(node))
-		if len(node) == node[0] and util.file(node) > util.rank(node):
-			evens.add(mirror(node))
+		#
+		#if len(node) == node[0] and util.file(node) > util.rank(node):
+			#evens.add(mirror(node))
 	return [node, num]
 
 def seed():
 	print("Seeding")
 	o_o = [[[],0]]
+
 
 	evens = [str([])]
 
@@ -141,6 +148,20 @@ def seed():
 
 	util.store(o_o, ETA_FOLDER / "1X1/f=1_r=1.dat")
 	util.store((1,evens), DATA_FOLDER / "n&evens.dat")
+
+	try:
+		os.mkdir(ETA_FOLDER / "2X2/")
+	except:
+		pass
+
+	util.store([ [[[0,0]],1] ], ETA_FOLDER / "2X2/f=2_r=2.dat")
+	util.store([ [[[1,1]],0] ], ETA_FOLDER / "2X2/f=1_r=1.dat")
+	util.store([ [[[2,1]],1] ], ETA_FOLDER / "2X2/f=0_r=1.dat")
+	util.store([ [[[2,2]],0] ], ETA_FOLDER / "2X2/f=0_r=0.dat")
+	evens = [str([]), str([[1,1]]), str([[2,2]])]
+	util.store((2,evens), DATA_FOLDER / "n&evens.dat")
+
+
 	print("Seeded")
 
 def profileIt():

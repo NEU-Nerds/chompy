@@ -17,3 +17,5 @@ print()
 for child in util.getChildren(b):
 	print(child)
 	print()
+
+print(util.genStartBoard(3,5))

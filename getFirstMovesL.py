@@ -20,11 +20,11 @@ etaData = {}
 for i in range (1,n+1):
 	nFolder = ETA_FOLDER / (str(i)+"X"+str(i)+"/")
 	print("Loading: " + str(i)+"X"+str(i))
-	for f in range(i):
-		for r in range(i):
+	for r in range(i):
+		for f in range(r+1):
 			if f == 0 and r == 0:
 				continue
-			partData = util.load(nFolder / ("f="+str(r)+"_r="+str(f)+".dat"))
+			partData = util.load(nFolder / ("f="+str(f)+"_r="+str(r)+".dat"))
 			for nodeN in partData:
 				etaData[str(nodeN[0])] = nodeN[1]
 
@@ -34,7 +34,7 @@ for i in range (1,n+1):
 
 	print("Loaded")
 
-if str([2]) in etaData.keys():
+if str([[1,1]]) in etaData.keys():
     print("It's there!")
 else:
     print("Nope sorry")
@@ -44,9 +44,11 @@ mirrors = 0
 for i in range(2,n+1):
 	for j in range(i,n+1):
 		fms = []
-		emptyB = [j]*i
-		children = heritage3.getChildren(emptyB)
+		emptyB = util.genStartBoard(i,j)
+		print("\n start: " + str(emptyB))
+		children = util.getChildren(emptyB)
 		for child in children:
+			print(child)
 			if str(child) in etaData.keys():
 				cNum = etaData[str(child)]
 			else:

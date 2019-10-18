@@ -71,28 +71,32 @@ def toArrayNotation(b):
 """
 #the number of cols that have a bite taken out of it, if there are no bites, 0
 def file(board):
-	try:
-		return board[-1][0]
-	except:
-		return 0
+	return board[-1][0]
+	# try:
+	# 	return board[-1][0]
+	# except:
+	# 	return 0
 
 def inverseFile(board):
-	try:
-		return len(board)-board[-1][0]+1
-	except:
-		return 0
+	return len(board)-board[-1][0]+1
+	# try:
+	# 	return len(board)-board[-1][0]+1
+	# except:
+	# 	return 0
 
 def rank(board):
-	try:
-		return board[-1][1]
-	except:
-		return 0
+	return board[-1][1]
+	# try:
+	# 	return board[-1][1]
+	# except:
+	# 	return 0
 #the first row that has a bite taken out of it, if there are no bites, 0
 def inverseRank(board):
-	try:
-		return len(board)-board[-1][1]+1
-	except:
-		return 0
+	return len(board)-board[-1][1]+1
+	# try:
+	# 	return len(board)-board[-1][1]+1
+	# except:
+	# 	return 0
 
 
 
@@ -113,7 +117,17 @@ def genEndBoard():
 
 #only square board
 def genBoard(n):
-	return [[0,0] for i in range(n)]
+	return [[0,0] for i in range(n-1)]
+
+#n >= m
+def genStartBoard(m,n):
+	b = []
+	for i in range(m-1):
+		b.append([0,0])
+	for i in range(m+1,n+1):
+		b.append([i,1])
+	return b
+
 
 """
 def getL(board, n):
@@ -214,6 +228,10 @@ def getChildren(board):
 				nbi +=1
 
 			if nb not in children and mirror(nb) not in children:
+
+				while len(nb) > 0 and nb[-1] == [len(nb)+1,len(nb)+1]:
+					# print(nb)
+					del nb[-1]
 				children.append(nb)
 		#choosing squares up col of l as bite
 		for y in range(max(2, board[i][1]+1), ln+1):
@@ -226,6 +244,10 @@ def getChildren(board):
 
 				nbi += 1
 			if nb not in children and mirror(nb) not in children:
+				# print(nb)
+				while len(nb) > 0 and nb[-1] == [len(nb)+1,len(nb)+1]:
+					# print(nb)
+					del nb[-1]
 				children.append(nb)
 	return children
 
