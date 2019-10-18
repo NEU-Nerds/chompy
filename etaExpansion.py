@@ -24,7 +24,7 @@ etaData = {N : eta(N)}
 workingNodes = [n-1,[(g,eta(g)), ]]
 """
 
-MAX_SIZE = 11
+MAX_SIZE = 4
 
 def main():
 	print("Loading Initial Data")
@@ -68,60 +68,59 @@ def expandLCentric(n, evens):
 	for i in reversed(range(1, n+1)):
 		#reversed(range(1, min(i,n-1)+1)):
 		for j in reversed(range(1, min(i,n-1)+1)):
-			#l = [i,j]
-			l = (i,j)
-
-			#if n == 3 and i == 3 and j == 2:
-				#print("\n\nYessir\n\n")
-				#continue
+			l = [i,j]
 			print("l: " + str(l))
 
-			# newWorkingNodes = []
 			newEtaData = []
+
+			"""
 			if j == 1:
 				g = [n-1]*(n-1)
 				newEtaData.append(etaLG(l, g, n, evens))
 				util.store(newEtaData, newDir / ("f="+str(i)+"_r="+str(j)+".dat") )
 				del newEtaData
 				continue
-
+			"""
 
 			#f = InvFile, r = InvRank
 			for f in range(n-i, n):
 				for r in range(n-j, f+1):
-					#if n == 3 and i == 3 and j == 2:
+
 					print("f: " + str(f) + "\tr: " + str(r))
 					if f == n-1 or r == n-1:
-						g = [n-1]*(n-1)
+						g = util.genBoard(n-1)
 						newEtaData.append(etaLG(l, g, n, evens))
 						util.store(newEtaData, newDir / ("f="+str(n-i)+"_r="+str(n-j)+".dat") )
-						# if n == 3 and i == 3 and j == 2:
-							# print("Falsely continued")
 						# continue
-					#print("f: " + str(f) + "\tr: " + str(r))
-					#G = [g]
+
 					G = util.load(prevDir / ("f="+str(f)+"_r="+str(r)+".dat"))
-					G.sort(key = lambda x: sum(x[0]))
+					G.sort(key = lambda x: unbittenA(x[0]))
 					for g in G:
-						if n == 3 and i == 3 and j == 2:
-							print(g)
 						newEtaData.append(etaLG(l, g[0], n, evens))
 						# newWorkingNodes.append(node)
 					del G
-			# util.store(newWorkingNodes, newDir / ("invF="+str(invF)+"_invR="+str(invR+".dat"))
+
 			util.store(newEtaData, newDir / ("f="+str(n-i)+"_r="+str(n-j)+".dat") )
 			del newEtaData
 			#storing in case of crash (nothing else is designed to handle a crash)
 			# util.store(list(evens), DATA_FOLDER / "evens.dat")
-	#L = [(0,0)]
-	util.store([[[n]*n,1]], newDir / ("f="+str(n)+"_r="+str(n)+".dat") )
+	util.store([[util.genBoard(n),1]], newDir / ("f="+str(n)+"_r="+str(n)+".dat") )
 
 	util.store([n, list(evens)], DATA_FOLDER / "n&evens.dat")
 	return evens
 
+def unbittenA(b):
+	sum = 0
+	print(b)
+	for i in range(len(b)):
+		sum += (i+2)*b[i][0] + (i+2)*b[i][1]
+		if b[i][0] > 0 and b[i][1] > 0:
+			sum -= 1
+	return sum
+
 def etaLG(l, g, n, evens):
 	num = eta.eta(g, l, n, evens)
-	node = util.combineG_L(g, l)
+	node = g + [l]
 	print("node: " + str(node))
 	if num % 2 == 0:
 		evens.add(str(node))
@@ -131,9 +130,9 @@ def etaLG(l, g, n, evens):
 
 def seed():
 	print("Seeding")
-	o_o = [[[1],0]]
+	o_o = [[[],0]]
 
-	evens = [str([1])]
+	evens = [str([])]
 
 	try:
 		os.mkdir(ETA_FOLDER / "1X1/")

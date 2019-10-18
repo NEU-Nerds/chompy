@@ -10,16 +10,18 @@ def eta(g, l, n, evens):
 	#print("\neta for g: "+str(g)+" l: "+str(l))
 	#rank(g) < n-1 and file(g) < n-1
 	#first part for if square
-	if g[0] == len(g)  and util.rank(g) < n-1 and util.file(g) < n-1:
+	#g[0] => util.inverseFile(g)
+	#len(g) => util.
+	if util.rank(g) == util.file(g) and util.rank(g) < n-1 and util.file(g) < n-1:
 		#if g = correct first move for a bite
-		if g[0] == n-1 and len(g) > 1 and g[1] == 1:
+		if util.inverseRank(g) == 1 and util.inverseFile(g) == 1 and g[0][1] == 1:
 			#print("SQUARE bite detected for " + str(g))
-			if l == (n-1, n-1):
+			if l == [n-1, n-1]:
 				return 0
-			elif l == (n, n-1):
+			elif l == [n, n-1]:
 				return 1
 			#because including mirrors for now
-			elif l == (n-1, n):
+			elif l == [n-1, n]:
 				return 1
 			else:
 				print("This should not have happend - eta case 1")
@@ -35,18 +37,19 @@ def eta(g, l, n, evens):
 				#getLPrime is adding a col to the right
 				#getLPrime shouldn't return a full L
 				#l[1] was util.getLPrime(g)
-				return etaPrime(g, l[1]-1, evens)
+				return etaPrime(g, l, evens)
 	else:
 		#print("wants to be elsa")
-		return etaPrime(g, l[1]-(n-len(g)), evens)
+		return etaPrime(g, l, evens)
 
 #for not square, only called by eta
-def etaPrime(gP, lP, evens):
+def etaPrime(g, l, evens):
 	# print("etaPrime gP: " + str(gP)+"\tlP: " + str(lP))
-	if str(gP) in evens:
+	if str(g) in evens:
 		return 1
 	#maybe pass in?
-	N = util.combineGP_LP(gP, lP)
+	N = g+[l]
+
 	#print("\netaPrime N: "+str(N))
 	return etaGraph(N, evens)
 
@@ -60,6 +63,7 @@ def etaGraph(node, evens):
 	return 0
 	"""
 
+	"""
 	bites = util.getChoices(node)
 	mirrors = []
 	for bite in bites:
@@ -74,5 +78,12 @@ def etaGraph(node, evens):
 			#return 1
 	for mirror in mirrors:
 		if str(util.mirror(child)) in evens:
+			return 1
+	return 0
+	"""
+
+	children = util.getChildren(node)
+	for child in children:
+		if str(child) in evens:
 			return 1
 	return 0

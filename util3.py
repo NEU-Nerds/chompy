@@ -1,6 +1,7 @@
 import numpy as np
 import json
 import pickle
+
 """
 A mXn board is an array of ints with length m.
 The fist value must be exactly n.
@@ -14,6 +15,8 @@ The poison is counted in the number of squares in the first row.
 #x, y are 0 indexed. X is the row, Y is the col
 #returns the bitten board
 # @profile
+"""
+#replaced by straight get children
 def bite(b, pos):
 	if pos[1] == 0:
 		return b[:pos[0]]
@@ -29,7 +32,8 @@ def bite(b, pos):
 	# board = [r if r > pos[1] else r for r in b]
 
 	return board
-
+"""
+"""
 def addRow(boardStates, newM):
 	newStates = []
 	for board in boardStates:
@@ -52,36 +56,48 @@ def addCol(boardStates, newN):
 			#TODO: matrix addition of newBoard and newCol
 			newStates.append(newBoard)
 	boardStates.extend(newStates)
-
+"""
+"""
 def getM(board):
 	return len(board)
 
 def getN(board):
 	return board[0]
-
+"""
+"""
 #returns a 2d array corresponding to the board state
 def toArrayNotation(b):
 	return [[0 if i < r else 1 for i in range(b[0])] for r in b]
-
+"""
 #the number of cols that have a bite taken out of it, if there are no bites, 0
 def file(board):
-	return board[0] - board[-1]
+	try:
+		return board[-1][0]
+	except:
+		return 0
 
 def inverseFile(board):
-	return board[-1]
-
-#the first row that has a bite taken out of it, if there are no bites, 0
-def inverseRank(board):
-	n = board[0]
-	for i in range(1, len(board)):
-		if board[i] < n:
-			return i
-	return len(board)
+	try:
+		return len(board)-board[-1][0]+1
+	except:
+		return 0
 
 def rank(board):
-	return len(board) - inverseRank(board)
+	try:
+		return board[-1][1]
+	except:
+		return 0
+#the first row that has a bite taken out of it, if there are no bites, 0
+def inverseRank(board):
+	try:
+		return len(board)-board[-1][1]+1
+	except:
+		return 0
+
+
 
 #generates a unique key to be used in the dict.
+#BE BANISHED DKEY!
 # def dKey(board):
 	# keyList = []
 	# key = ""
@@ -93,11 +109,13 @@ def rank(board):
 	# return str(board)
 
 def genEndBoard():
-	return [1]
+	return []
 
-def genBoard(m, n):
-	return [n] * m
+#only square board
+def genBoard(n):
+	return [[0,0] for i in range(n)]
 
+"""
 def getL(board, n):
 	L = []
 	b = board.copy()
@@ -118,10 +136,13 @@ def getL(board, n):
 		L.append((0, 0))
 
 	return L
-
+"""
+"""
 def getLPrime(board):
 	return [i for i in range(rank(board), getM(board))]
-
+"""
+"""
+#now just g + l
 def combineG_L(g, l):
 	#print("Combining g: " + str(g) + " and l: " + str(l))
 	node = g.copy()
@@ -153,15 +174,64 @@ def combineGP_LP(gP, lP):
 	for i in range(len(node)-lP):
 		node[i] += 1
 	return node
+"""
+def getCopy(b):
+	return [i[:] for i in b]
 
 # @profile
-def getChoices(board):
-	choices = [(i, j) for i in range(len(board)) for j in range(board[i])]
-	choices = choices[1:]
-	return choices
+def getChildren(board):
+	children = []
+	lenB = len(board)
+	for i in range(lenB):
+		ln = i+2
+		#along the row
+		#leastFilledBoard
+
+		lfB = [nbL[:] for nbL in board]
+		#fill in like bite at corner of li
+		if board[i][0] == 0:
+			lfbi = i
+			while lfbi < lenB and board[lfbi][0]-(lfbi-i) < 1:
+				lfB[lfbi][0] = (lfbi)-(i-1)
+				if lfB[lfbi][1] == 0:
+					lfB[lfbi][1] = 1
+				lfbi +=1
+			lfbi = i
+			while lfbi < lenB and board[lfbi][1]-(lfbi-i) < 1:
+				lfB[lfbi][1] = (lfbi)-(i-1)
+				if lfB[lfbi][0] == 0:
+					lfB[lfbi][0] = 1
+				lfbi +=1
+
+		#choosing squares along row of l as bite
+		for x in range(board[i][0]+1, ln+1):
+			nb = [nbL[:] for nbL in lfB]
+			nbi = i
+			while nbi < lenB and board[nbi][0]-(nbi-i) < x:
+				nb[nbi][0] = (nbi)-(i-x)
+				if nb[nbi][1] == 0:
+					nb[nbi][1] = 1
+				nbi +=1
+
+			if nb not in children and mirror(nb) not in children:
+				children.append(nb)
+		#choosing squares up col of l as bite
+		for y in range(max(2, board[i][1]+1), ln+1):
+			nb = [nbL[:] for nbL in lfB]
+			nbi = i
+			while nbi < lenB and board[nbi][1]-(nbi-i) < y:
+				nb[nbi][1] = (nbi)-(i-y)
+				if nb[nbi][0] == 0:
+					nb[nbi][0] = 1
+
+				nbi += 1
+			if nb not in children and mirror(nb) not in children:
+				children.append(nb)
+	return children
+
 
 def getMxNFileName(m, n):
-	return str(m) + "x" + str(n) + ".json"
+	return str(m) + "X" + str(n) + ".dat"
 
 def loadJson(fileName):
 	with open(fileName, "r") as file:
@@ -195,15 +265,9 @@ def seed():
 
 # @profile
 def mirror(board):
-	# [ for i in range(len(board))]
-	mirrored = [0] * board[0] #initialize the mirrored rectangular board
-	for i in range(board[0]):
-		mirrored[i] = 0
-		for j in range(len(board)):
-			if board[j] > i:
-				mirrored[i] += 1
-	return mirrored
+	return [[x[1],x[0]] for x in board]
 
+"""
 def fromArr(arr):
 	b = []
 	for r in arr:
@@ -215,7 +279,8 @@ def fromArr(arr):
 				n += 1
 		b.append(n)
 	return b
-
+"""
+"""
 #can you get from b to c with only 1 bite(b is parent)
 def isDirectChild(b, c):
 	hasDelta = False#has the value of at least one previous row changed
@@ -241,7 +306,7 @@ def isDirectChild(b, c):
 def toBoard(key):
 	# return np.array(key).tolist()
 	return key.strip('][').split(', ')
-
+"""
 """
 TEST STUFF
 """
