@@ -14,7 +14,7 @@ ETA_FOLDER = DATA_FOLDER / "etaData/"
 
 #print(util.file([3]))
 
-n = 4
+n = 5
 
 etaData = {}
 for i in range (1,n+1):
@@ -34,10 +34,12 @@ for i in range (1,n+1):
 
 	print("Loaded")
 
-if str([[1,1]]) in etaData.keys():
-    print("It's there!")
-else:
-    print("Nope sorry")
+# if str([[1,1]]) in etaData.keys():
+#     print("It's there!")
+# else:
+#     print("Nope sorry")
+print(etaData[str([[0,0],[0,0],[4,2],[5,3]])])
+print("\n\n")
 
 firstMoves = {}
 mirrors = 0
@@ -45,15 +47,17 @@ for i in range(2,n+1):
 	for j in range(i,n+1):
 		fms = []
 		emptyB = util.genStartBoard(i,j)
-		print("\n start: " + str(emptyB))
+		print("\ni: " + str(i) + " j: " + str(j))
+		print(" start: " + str(emptyB))
 		children = util.getChildren(emptyB)
 		for child in children:
-			print(child)
+			# print(str(child) + "\t" + str(etaData[str(child)]))
 			if str(child) in etaData.keys():
 				cNum = etaData[str(child)]
 			else:
 				mirrors += 1
 				cNum = etaData[str(util.mirror(child))]
+			print(str(child) + "\t" + str(cNum))
 			if cNum % 2 == 0:
 				fms.append(child)
 		firstMoves[str(i)+"X"+str(j)] = fms

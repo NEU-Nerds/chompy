@@ -12,6 +12,8 @@ def eta(g, l, n, evens):
 	#first part for if square
 	#g[0] => util.inverseFile(g)
 	#len(g) => util.
+	#return etaPrime(g, l, evens)
+
 	if util.rank(g) == util.file(g) and util.rank(g) < n-1 and util.file(g) < n-1:
 		#if g = correct first move for a bite
 		if util.inverseRank(g) == 1 and util.inverseFile(g) == 1 and g[0][1] == 1:

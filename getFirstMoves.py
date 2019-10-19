@@ -14,7 +14,7 @@ DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc3/")
 
 #print(util.file([3]))
 
-n = 5
+n = 8
 
 etaData = {}
 for i in range (2,n+1):

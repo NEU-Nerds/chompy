@@ -15,6 +15,7 @@ The poison is counted in the number of squares in the first row.
 #x, y are 0 indexed. X is the row, Y is the col
 #returns the bitten board
 # @profile
+
 """
 #replaced by straight get children
 def bite(b, pos):
@@ -125,7 +126,7 @@ def genStartBoard(m,n):
 	for i in range(m-1):
 		b.append([0,0])
 	for i in range(m+1,n+1):
-		b.append([i,1])
+		b.append([i,i-m])
 	return b
 
 

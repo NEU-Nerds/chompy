@@ -24,7 +24,7 @@ etaData = {N : eta(N)}
 workingNodes = [n-1,[(g,eta(g)), ]]
 """
 
-MAX_SIZE = 8
+MAX_SIZE = 5
 
 def main():
 	print("Loading Initial Data")
@@ -99,6 +99,19 @@ def expandLCentric(n, evens):
 
 					G = util.load(prevDir / ("f="+str(f)+"_r="+str(r)+".dat"))
 					# print("G: " + str(G))
+					# if r == 2 and f == 1:
+					# 	print("Pre G: " + str(G))
+
+					#add mirrors
+					newG = []
+					for g in G:
+						if util.file(g[0]) > util.rank(g[0]):
+							newG.append([util.mirror(g[0]), g[1]])
+					G += newG
+					# if r == 2 and f == 1:
+					# 	print("Post G: " + str(G))
+					# 	print("newG: " + str(newG))
+
 					G.sort(key = lambda x: unbittenA(x[0]))
 					for g in G:
 						newEtaData.append(etaLG(l, g[0], n, evens))
@@ -113,6 +126,7 @@ def expandLCentric(n, evens):
 
 	util.store([n, list(evens)], DATA_FOLDER / "n&evens.dat")
 	return evens
+
 
 def unbittenA(b):
 	sum = 0
