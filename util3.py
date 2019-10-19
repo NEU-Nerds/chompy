@@ -231,6 +231,19 @@ def toBoard(key):
 	# return np.array(key).tolist()
 	return key.strip('][').split(', ')
 
+def revOldDKey(key):
+	i = 0
+	b = []
+	while i < len(key):
+		row = []
+		while i < len(key) and key[i] != "/":
+			row.append(bool(int(key[i])))
+			i += 1
+		b.append(row)
+		i += 1
+	b = list(reversed(b))
+	return fromArr(b)
+
 """
 TEST STUFF
 """
