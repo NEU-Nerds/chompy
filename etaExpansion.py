@@ -24,7 +24,7 @@ etaData = {N : eta(N)}
 workingNodes = [n-1,[(g,eta(g)), ]]
 """
 
-MAX_SIZE = 11
+MAX_SIZE = 13
 
 def main():
 	print("Loading Initial Data")
@@ -106,8 +106,9 @@ def expandLCentric(n, evens):
 				G.sort(key = lambda x: sum(x[0]))
 				# print("sorted")
 				for g in G:
-
-					newEtaData.append(etaLG(l, g[0], n, evens))
+					ret = etaLG(l, g[0], n, evens)
+					if ret:
+						newEtaData.append(ret)
 				del G
 		#adding g = empty prev board
 		g = [n-1]*(n-1)
@@ -123,8 +124,11 @@ def expandLCentric(n, evens):
 	return evens
 
 def etaLG(l, g, n, evens):
-	num = eta.eta(g, l, n, evens)
 	node = util.combineG_L(g, l)
+	if node[-1] < 0:
+		return None
+	num = eta.eta(g, l, n, evens)
+
 	# print("node: " + str(node) +"\tnum: " + str(num))
 	if num % 2 == 0:
 		evens.add(str(node))
