@@ -5,7 +5,7 @@ from pathlib import Path
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 #THIS_FOLDER = "D:/Mass Storage/Math/chompy"
-DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc4/")
+DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc5/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
 #etaData = util.load(DATA_FOLDER / "etaData.dat")
 
@@ -14,8 +14,8 @@ ETA_FOLDER = DATA_FOLDER / "etaData/"
 
 #print(util.file([3]))
 
-n = 11
-
+n = 13
+"""
 etaData = {}
 for i in range (1,n+1):
 	nFolder = ETA_FOLDER / (str(i)+"X"+str(i)+"/")
@@ -62,5 +62,25 @@ for i in range(2,n+1):
 			if cNum % 2 == 0:
 				fms.append(child)
 		firstMoves[str(i)+"X"+str(j)] = fms
-util.storeJson(firstMoves, DATA_FOLDER / "firstMovesV3-5_new_4.json")
+util.storeJson(firstMoves, DATA_FOLDER / "firstMovesV3-5_16.json")
 print("Mirrors: " + str(mirrors))
+"""
+firstMoves = {}
+n_evens = util.load(DATA_FOLDER / "n&evens.dat")
+evens = set(n_evens[1])
+for i in range(2,n+1):
+	for j in range(i,n+1):
+		print("Getting moves for " + str(i)+"X"+str(j))
+		fms = []
+		emptyB = [j]*i
+		children = heritage3.getChildren(emptyB)
+		for child in children:
+			#for children that are rectangles (may not show up in the right file)
+			# if child[0] == child[-1]:
+			# 	continue
+			if str(child) in evens or str(util.mirror(child)) in evens:
+				fms.append(child)
+		firstMoves[str(i)+"X"+str(j)] = fms
+		if len(fms) > 1:
+			print("Length of "+ str(i)+"X"+str(j)+" fms is " + str(len(fms)))
+util.storeJson(firstMoves, DATA_FOLDER / "firstMovesV3-5_16.json")
