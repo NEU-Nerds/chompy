@@ -8,7 +8,7 @@ import csv
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 #THIS_FOLDER = "D:/Mass Storage/Math/chompy"
 THIS_FOLDER = Path(THIS_FOLDER)
-DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc4/")
+DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc5/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
 
 """
@@ -24,9 +24,10 @@ etaData = {N : eta(N)}
 workingNodes = [n-1,[(g,eta(g)), ]]
 """
 
-MAX_SIZE = 13
+MAX_SIZE = 11
 
 def main():
+
 	print("Loading Initial Data")
 	#etaData = util.load(DATA_FOLDER / "etaData.dat")
 	n_evens = util.load(DATA_FOLDER / "n&evens.dat")
@@ -53,8 +54,17 @@ def main():
 			evens = expandLCentric(n, evens)
 			timeEnd = time.time()
 			timeWriter.writerow([n, timeEnd-timeStart, timeEnd-timeBeginExpand])
+			print("Time elapsed: " + str(timeEnd-timeBeginExpand))
+			print("Time for " + str(n)+"X"+str(n) + ": " + str(timeEnd-timeStart))
 
-
+"""
+batching:
+change to folders per inv R and L
+store in order of sort
+load in order
+how store? (1million each?)
+stored as number [0,n]
+"""
 def expandLCentric(n, evens):
 	prevDir = ETA_FOLDER / (str(n-1)+"X"+str(n-1))
 	newDir = ETA_FOLDER / (str(n)+"X"+str(n))
@@ -74,47 +84,72 @@ def expandLCentric(n, evens):
 
 	for l in L:
 		newEtaData = []
+		fileCount = 0
 		# print("\nl: " + str(l))
 		#file >= rank
 		#MUST DO INVERSE FILE BECAUSE SOME BOARDS NOT SQUARE
 		#reg f: range(1,l[0])
+		thisDir = newDir / ("invF="+str(n-l[0])+"_invR="+str(n-l[1]))
+		try:
+			os.mkdir(thisDir)
+		except:
+			pass
 		for f in range(n-l[0],n-1):
 			# reg r: range(1,min(f,l[1]-1)+1)
 			for r in range(max(n-l[1], f), n-1):
 				# print("f: " + str(f)+"\tr: " + str(r))
-				G = util.load(prevDir / ("invF="+str(f)+"_invR="+str(r)+".dat"))
-				# print("G: " +str(G))
-				#getting mirrors
 
-				newG = []
-				for g in G:
-					# print("g: " + str(g))
-					gF = util.file(g[0])
-					gR = util.rank(g[0])
-					#if mirror would have rank and file compatable
-					#also if rank != file?
-					if gF < l[1] and gR < l[0] and gF != gR:
-						# print("Mirroring")
-						# if [util.mirror(g[0]), g[1]] in newG:
-						# 	print("Excess mirror " + str(g[0]))
-						newG.append([util.mirror(g[0]), g[1]])
+				prevSubDir = prevDir / ("invF="+str(f)+"_invR="+str(r))
 
-				G += newG
-				# print("postG: " + str(G))
-				#sorting by num choices (least choices first) => earlier nodes don't rely on
-				#later nodes as children in etaGraph
-				G.sort(key = lambda x: sum(x[0]))
-				# print("sorted")
-				for g in G:
-					ret = etaLG(l, g[0], n, evens)
-					if ret:
-						newEtaData.append(ret)
-				del G
+
+				#Assuming all files are dat files
+				files = os.listdir(prevSubDir)
+				for i in range(len(files)):
+
+					G = util.load(prevSubDir / (str(i)+".dat"))
+					# print("G: " +str(G))
+					#getting mirrors
+
+					newG = []
+					for g in G:
+						# print("g: " + str(g))
+						gF = util.file(g[0])
+						gR = util.rank(g[0])
+						#if mirror would have rank and file compatable
+						#also if rank != file?
+						if gF < l[1] and gR < l[0] and gF != gR:
+							# print("Mirroring")
+							# if [util.mirror(g[0]), g[1]] in newG:
+							# 	print("Excess mirror " + str(g[0]))
+							newG.append([util.mirror(g[0]), g[1]])
+
+					G += newG
+					del newG
+					# print("postG: " + str(G))
+					#sorting by num choices (least choices first) => earlier nodes don't rely on
+					#later nodes as children in etaGraph
+					G.sort(key = lambda x: sum(x[0]))
+					# print("sorted")
+					for g in G:
+						ret = etaLG(l, g[0], n, evens)
+						if ret:
+							newEtaData.append(ret)
+						del g
+						del ret
+						if len(newEtaData) > 1000000:
+							# print("Storing sub file!")
+							#store
+							newEtaData.sort(key = lambda x: sum(x[0]))
+							util.store(newEtaData, thisDir / (str(fileCount)+".dat"))
+							fileCount += 1
+							del newEtaData
+							newEtaData = []
+					del G
 		#adding g = empty prev board
 		g = [n-1]*(n-1)
 		newEtaData.append(etaLG(l, g, n, evens))
 
-		util.store(newEtaData, newDir / ("invF="+str(n-l[0])+"_invR="+str(n-l[1])+".dat") )
+		util.store(newEtaData, thisDir / (str(fileCount)+".dat") )
 		del newEtaData
 
 	#L = [(0,0)]
@@ -146,9 +181,17 @@ def seed():
 		os.mkdir(ETA_FOLDER / "1X1/")
 	except:
 		pass
+	try:
+		os.mkdir(ETA_FOLDER / "1X1/invF=1_invR=1/")
+	except:
+		pass
+	try:
+		os.mkdir(ETA_FOLDER / "1X1/invF=0_invR=0/")
+	except:
+		pass
 
-	util.store(o_o, ETA_FOLDER / "1X1/invF=1_invR=1.dat")
-	util.store([], ETA_FOLDER / "1X1/invF=0_invR=0.dat")
+	util.store(o_o, ETA_FOLDER / "1X1/invF=1_invR=1/0.dat")
+	util.store([], ETA_FOLDER / "1X1/invF=0_invR=0/0.dat")
 	util.store((1,evens), DATA_FOLDER / "n&evens.dat")
 	print("Seeded")
 
@@ -161,5 +204,5 @@ if __name__ == "__main__":
 		os.mkdir(ETA_FOLDER)
 	except:
 		pass
-	seed()
+	#seed()
 	main()
