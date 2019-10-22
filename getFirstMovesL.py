@@ -5,7 +5,7 @@ from pathlib import Path
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 #THIS_FOLDER = "D:/Mass Storage/Math/chompy"
-DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc5/")
+DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc6/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
 #etaData = util.load(DATA_FOLDER / "etaData.dat")
 
@@ -14,7 +14,7 @@ ETA_FOLDER = DATA_FOLDER / "etaData/"
 
 #print(util.file([3]))
 
-n = 13
+n = 8
 """
 etaData = {}
 for i in range (1,n+1):
@@ -83,4 +83,4 @@ for i in range(2,n+1):
 		firstMoves[str(i)+"X"+str(j)] = fms
 		if len(fms) > 1:
 			print("Length of "+ str(i)+"X"+str(j)+" fms is " + str(len(fms)))
-util.storeJson(firstMoves, DATA_FOLDER / "firstMovesV3-5_16.json")
+util.storeJson(firstMoves, DATA_FOLDER / "firstMovesV3-5m_8-2.json")

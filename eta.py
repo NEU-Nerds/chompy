@@ -1,12 +1,13 @@
 import util3 as util
 import heritage3
 import ast
+import multiprocessing as mp
 
 #number of columns >= num of rows (because mirroring)
 
 #for square
 #G MUST BE SQUARE OR IT BREAK
-def eta(g, l, n, evens):
+def eta(g, l, n, evens, pHandler):
 	# print("\neta for g: "+str(g)+" l: "+str(l))
 	#rank(g) < n-1 and file(g) < n-1
 	#first part for if square
@@ -38,42 +39,57 @@ def eta(g, l, n, evens):
 				#getLPrime is adding a col to the right
 				#getLPrime shouldn't return a full L
 				#l[1] was util.getLPrime(g)
-				return etaPrime(g, l[1]-1, evens)
+				return etaPrime(g, l[1]-1, evens, pHandler)
 	else:
 		#print("wants to be elsa")
-		return etaPrime(g, l[1]-(n-len(g)), evens)
+		return etaPrime(g, l[1]-(n-len(g)), evens, pHandler)
 
 #for not square, only called by eta
-def etaPrime(gP, lP, evens):
+def etaPrime(gP, lP, evens, pHandler):
 	# print("etaPrime gP: " + str(gP)+"\tlP: " + str(lP))
 	if inEvens(gP, evens):
 		return 1
 	#maybe pass in?
 	N = util.combineGP_LP(gP, lP)
 	# print("\netaPrime N: "+str(N))
-	return etaGraph(N, evens)
+	return etaGraph(N, evens, pHandler)
 
 #@profile
-def etaGraph(node, evens):
-
-
+def etaGraph(node, evens, pHandler):
+	#just in case outQ was added to twice
+	# print("in etaGraph")
+	while not pHandler.outQ.empty():
+		# print("emptying outQ")
+		pHandler.outQ.get()
+	# print("past emptying")
 	bites = util.getChoices(node)
 	mirrors = []
 
+	#lock so eval process doesn't empty a not yet full Q
+	# print("getting lock")
+	pHandler.lock.acquire()
+	# print("aquired lock")
+	# outQ = mp.Queue()
+	# print("Adding bites")
 	for bite in bites:
-		child = util.bite(node, bite)
-		# print("child: " + str(child))
-		if inEvens(child, evens):
-			# print("Even child: " + str(child))
+		pHandler.add([node, bite, evens])
+	pHandler.lock.release()
+
+	#wait till finished
+	pHandler.evalQ.join()
+	# print("past join")
+
+	if pHandler.outQ.empty():
+		# print("outQ was empty")
+		return 0
+	else:
+		ret = pHandler.outQ.get()
+		# print("ret: " + str(ret))
+		if ret:
+			# print("There was an even")
 			return 1
-		else:
-			#print("Odd child: " + str(child))
-			mirrors.append(child)
-		# elif inEvens(util.mirror(child), evens):
-			# return 1
-	for mirror in mirrors:
-		if inEvens(util.mirror(mirror), evens):
-			return 1
+
+	print("This should never have happend what (etaGraph)")
 	return 0
 
 def inEvens(node, evens):

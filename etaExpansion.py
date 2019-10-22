@@ -4,11 +4,12 @@ import os
 from pathlib import Path
 import time
 import csv
+import multiP
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 #THIS_FOLDER = "D:/Mass Storage/Math/chompy"
 THIS_FOLDER = Path(THIS_FOLDER)
-DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc5/")
+DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc6/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
 
 """
@@ -25,6 +26,7 @@ workingNodes = [n-1,[(g,eta(g)), ]]
 """
 
 MAX_SIZE = 11
+EVAL_THREADS = 6
 
 def main():
 
@@ -46,12 +48,14 @@ def main():
 
 		timeWriter.writerow(["N", "Time Added", "Total Time"])
 
+		pHandler = multiP.etaMultiHandler(EVAL_THREADS)
+
 		for n in range(startN+1, MAX_SIZE+1):
 			timeStart = time.time()
 
 			print("\nExpanding to " + str(n)+"X"+str(n))
 
-			evens = expandLCentric(n, evens)
+			evens = expandLCentric(n, evens, pHandler)
 			timeEnd = time.time()
 			timeWriter.writerow([n, timeEnd-timeStart, timeEnd-timeBeginExpand])
 			print("Time elapsed: " + str(timeEnd-timeBeginExpand))
@@ -65,7 +69,7 @@ load in order
 how store? (1million each?)
 stored as number [0,n]
 """
-def expandLCentric(n, evens):
+def expandLCentric(n, evens, pHandler):
 	prevDir = ETA_FOLDER / (str(n-1)+"X"+str(n-1))
 	newDir = ETA_FOLDER / (str(n)+"X"+str(n))
 	try:
@@ -131,7 +135,7 @@ def expandLCentric(n, evens):
 					G.sort(key = lambda x: sum(x[0]))
 					# print("sorted")
 					for g in G:
-						ret = etaLG(l, g[0], n, evens)
+						ret = etaLG(l, g[0], n, evens, pHandler)
 						if ret:
 							newEtaData.append(ret)
 						del g
@@ -147,7 +151,7 @@ def expandLCentric(n, evens):
 					del G
 		#adding g = empty prev board
 		g = [n-1]*(n-1)
-		newEtaData.append(etaLG(l, g, n, evens))
+		newEtaData.append(etaLG(l, g, n, evens, pHandler))
 
 		util.store(newEtaData, thisDir / (str(fileCount)+".dat") )
 		del newEtaData
@@ -158,11 +162,11 @@ def expandLCentric(n, evens):
 	util.store([n, list(evens)], DATA_FOLDER / "n&evens.dat")
 	return evens
 
-def etaLG(l, g, n, evens):
+def etaLG(l, g, n, evens, pHandler):
 	node = util.combineG_L(g, l)
 	if node[-1] < 0:
 		return None
-	num = eta.eta(g, l, n, evens)
+	num = eta.eta(g, l, n, evens, pHandler)
 
 	# print("node: " + str(node) +"\tnum: " + str(num))
 	if num % 2 == 0:
@@ -204,5 +208,5 @@ if __name__ == "__main__":
 		os.mkdir(ETA_FOLDER)
 	except:
 		pass
-	#seed()
+	seed()
 	main()
