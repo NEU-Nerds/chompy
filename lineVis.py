@@ -10,7 +10,7 @@ THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc1/solved/")
 ANALYSIS_FOLDER = Path(THIS_FOLDER, "./data/analysis/")
 
-maxGen = 56
+maxGen = 50
 
 def seed3xN():
 	global maxGen
@@ -63,13 +63,14 @@ def appendPt(n, arr):
 		arr[2].append(0)
 
 def main():
-	# nodes = seed3xN()
-	nodes = load3xN()
+	nodes = seed3xN()
+	# nodes = load3xN()
 
 	print("Making Plot...")
 
 	fig = plt.figure()
-	ax = fig.add_subplot(111, projection="3d")
+	# ax = fig.add_subplot(111, projection="3d")
+	ax = fig.add_subplot(111)
 
 	nE = [[], [], []]
 	nO = [[], [], []]
@@ -89,9 +90,9 @@ def main():
 			[[50, 35, 24], 0],
 			[[52, 36, 26], 0]]
 
-	ptNumber = 10
+	ptNumber = 8
 
-	drawBounds(ax)
+	# drawBounds(ax)
 
 	drawPlane(pts[ptNumber], ax)
 
