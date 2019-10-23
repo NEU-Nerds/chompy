@@ -15,7 +15,7 @@ class etaMultiHandler:
 		for p in self.processes:
 			p.start()
 
-	 #item = [node, bite, evens, outQ]
+	#item = [node, bite, evens]
 	def add(self, item):
 		self.evalQ.put(item)
 
@@ -35,7 +35,7 @@ def eval(q, outQ, lock):
 		evens = item[2]
 
 		child = util.bite(node, bite)
-		if inEvens(child, evens) or inEvens(util.mirror(child), evens):
+		if inEvens(child, evens):
 			# print("found evens")
 			outQ.put(1)
 			# q.cancel_join_thread()

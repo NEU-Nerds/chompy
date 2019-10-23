@@ -13,7 +13,6 @@ The poison is counted in the number of squares in the first row.
 #bite the matrix based board at the coordinates (x, y)
 #x, y are 0 indexed. X is the row, Y is the col
 #returns the bitten board
-# @profile
 def bite(b, pos):
 	if pos[1] == 0:
 		return b[:pos[0]]
@@ -30,6 +29,8 @@ def bite(b, pos):
 
 	return board
 
+
+"""
 def addRow(boardStates, newM):
 	newStates = []
 	for board in boardStates:
@@ -52,6 +53,7 @@ def addCol(boardStates, newN):
 			#TODO: matrix addition of newBoard and newCol
 			newStates.append(newBoard)
 	boardStates.extend(newStates)
+"""
 
 def getM(board):
 	return len(board)
@@ -67,10 +69,12 @@ def toArrayNotation(b):
 def file(board):
 	return board[0] - board[-1]
 
+# equals n - file
 def inverseFile(board):
 	return board[-1]
 
 #the first row that has a bite taken out of it, if there are no bites, 0
+#equals m - rank
 def inverseRank(board):
 	n = board[0]
 	for i in range(1, len(board)):
@@ -78,26 +82,19 @@ def inverseRank(board):
 			return i
 	return len(board)
 
+#the number of rows that have a bite taken out of it, if there are no bites, 0
 def rank(board):
 	return len(board) - inverseRank(board)
 
-#generates a unique key to be used in the dict.
-# def dKey(board):
-	# keyList = []
-	# key = ""
-	# for row in board:
-		# keyList.append("/" + str(int(row)))
-		# key += "/" + str(int(row))
-	# return ''.join(keyList[1:])
-	# return key[1:]
-	# return str(board)
-
+#the board with just poison left
 def genEndBoard():
 	return [1]
-
+#gens an empty board of size mXn
 def genBoard(m, n):
 	return [n] * m
 
+#artifacts of G centric, left in case needed for analysis
+"""
 def getL(board, n):
 	L = []
 	b = board.copy()
@@ -121,7 +118,9 @@ def getL(board, n):
 
 def getLPrime(board):
 	return [i for i in range(rank(board), getM(board))]
+"""
 
+#returns the node which = g+l
 def combineG_L(g, l):
 	#print("Combining g: " + str(g) + " and l: " + str(l))
 	node = g[:]
@@ -146,6 +145,7 @@ def combineG_L(g, l):
 	return node
 
 #not checking to see if lP is > inverseRank (means it's assuming l is an allowable l)
+#returns the node which = g'+l'
 def combineGP_LP(gP, lP):
 	node = gP.copy()
 	n = gP[0] + 1
@@ -154,7 +154,7 @@ def combineGP_LP(gP, lP):
 		node[i] += 1
 	return node
 
-# @profile
+# gets all the possible move choices (all the un-bitten not poisoned squares)
 def getChoices(board):
 	choices = [(i, j) for i in range(len(board)) for j in range(board[i])]
 	choices = choices[1:]
@@ -184,7 +184,7 @@ def load(fileName):
 def store(data, fileName):
 	with open(fileName, 'wb') as f:
 		pickle.dump(data, f)
-
+"""
 def seed():
 	#{key:eta}
 	#[(node,eta)]
@@ -192,10 +192,9 @@ def seed():
 	evens = [str([1]), str([2,1])]
 	workingData = [[2], [2,1], [2,2]]
 	return etaData, workingData, evens
-
-# @profile
+"""
+# returns the mirror of the board reflected about the diagonal line y = -x (From poison to bottom left)
 def mirror(board):
-	# [ for i in range(len(board))]
 	mirrored = [0] * board[0] #initialize the mirrored rectangular board
 	for i in range(board[0]):
 		mirrored[i] = 0
