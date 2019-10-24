@@ -50,13 +50,6 @@ def main():
 
 
 def expandLCentric(n, evens):
-	#expand evens
-	for row in evens:
-		row.append(set([]))
-	evens.append([])
-	for i in range(n+1):
-		evens[-1].append(set([]))
-
 
 	#directory of n-1 X n-1 data
 	prevDir = ETA_FOLDER / (str(n-1)+"X"+str(n-1))
@@ -183,10 +176,9 @@ def etaLG(l, g, n, evens):
 
 	#if the node is even updated evens with node and mirror of node
 	if num % 2 == 0:
-		evens[util.inverseRank(node)][util.inverseFile(node)].add(str(node))
+		evens.add(str(node))
 		#if len(node) == node[0] and util.file(node) > util.rank(node):
-		mir = util.mirror(node)
-		evens[util.inverseRank(mir)][util.inverseFile(mir)].add(str(mir))
+		evens.add(str(util.mirror(node)))
 	return [node, num]
 
 
@@ -207,8 +199,8 @@ def seed():
 	except:
 		pass
 
-	# evens = [str([1])]
-	evens = [ [set([]), set([])], [set([]), set([str([1])])] ]
+	evens = set([str([1])])
+	# evens = [ [set([]), set([])], [set([]), set([str([1])])] ]
 	util.store([[[1],0]], ETA_FOLDER / "1X1/invF=1_invR=1/0.dat")
 	util.store([], ETA_FOLDER / "1X1/invF=0_invR=0/0.dat")
 	util.store((1,evens), DATA_FOLDER / "n&evens.dat")
@@ -223,5 +215,5 @@ if __name__ == "__main__":
 		os.mkdir(ETA_FOLDER)
 	except:
 		pass
-	# seed()
+	seed()
 	main()

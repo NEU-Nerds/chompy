@@ -41,26 +41,26 @@ def eta(g, l, n, evens):
 				#getLPrime is adding a col to the right
 				#getLPrime shouldn't return a full L
 				#l[1] was util.getLPrime(g)
-				return etaPrime(g, l[1]-1, evens, n)
+				return etaPrime(g, l[1]-1, evens)
 	else:
 		#g not square so adjusting l[1] to match
-		return etaPrime(g, l[1]-(n-len(g)), evens, n)
+		return etaPrime(g, l[1]-(n-len(g)), evens)
 
 #for not square, only called by eta
-def etaPrime(gP, lP, evens, n):
+def etaPrime(gP, lP, evens):
 	# print("etaPrime gP: " + str(gP)+"\tlP: " + str(lP))
 	#if g is even then just play top right
-	if inEvens(gP, evens, len(gP) + 1):
+	if inEvens(gP, evens):
 		return 1
 	#maybe pass in? - the combined node
-	N = util.combineGP_LP(gP, lP, n)
+	N = util.combineGP_LP(gP, lP)
 	# print("\netaPrime N: "+str(N))
 
 	#relying on graph children logic
-	return etaGraph(N, evens, n)
+	return etaGraph(N, evens)
 
 #@profile
-def etaGraph(node, evens, n):
+def etaGraph(node, evens):
 
 
 	bites = util.getChoices(node)
@@ -69,7 +69,7 @@ def etaGraph(node, evens, n):
 	for bite in bites:
 		child = util.bite(node, bite)
 		# print("child: " + str(child))
-		if inEvens(child, evens, len(child)):
+		if inEvens(child, evens):
 			# print("Even child: " + str(child))
 			return 1
 		else:
@@ -78,9 +78,10 @@ def etaGraph(node, evens, n):
 		# elif inEvens(util.mirror(child), evens):
 			# return 1
 	for mirror in mirrors:
-		if inEvens(util.mirror(mirror), evens, len(mirror)):
+		if inEvens(util.mirror(mirror), evens):
 			return 1
 	return 0
 
-def inEvens(node, evens, n):
-	return (str(node) in evens[n][util.inverseRank(node)][util.inverseFile(node)])
+def inEvens(node, evens):
+	return str(node) in evens
+	# return (str(node) in evens[n][util.inverseRank(node)][util.inverseFile(node)])
