@@ -82,4 +82,4 @@ def etaGraph(node, evens):
 	return 0
 
 def inEvens(node, evens):
-	return (str(node) in evens)
+	return (str(node) in evens[util.inverseRank(node)][util.inverseFile(node)])
