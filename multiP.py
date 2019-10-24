@@ -25,26 +25,44 @@ class etaMultiHandler:
 
 def eval(q, outQ, lock):
 	while True:
+		# lock.acquire()
 		item = q.get()
-		if item is None:
-			time.sleep(0.001)
-			continue
-		# print("Evaling object")
+		# lock.release()
+		# if item is None:
+		# 	print("item was none")
+		# 	time.sleep(0.001)
+		# 	continue
+		print("Evaling object")
+
 		node = item[0]
 		bite = item[1]
 		evens = item[2]
 
 		child = util.bite(node, bite)
+		print("got child")
 		if inEvens(child, evens):
-			# print("found evens")
+			print("found evens")
 			outQ.put(1)
+			print("put 1 to outQ")
 			# q.cancel_join_thread()
 			lock.acquire()
+			print("Got lock")
+
 			while not q.empty():
-				q.get()
-				q.task_done()
+				try:
+					q.get(0.01)
+					q.task_done()
+				except:
+					print("Excepting")
+					break
+			print("emptyed q")
 			lock.release()
+			print("released lock")
+		print("finishing")
+		# if outQ.empty():
 		q.task_done()
+		print("task doned")
+		print("finished")
 
 def inEvens(node, evens):
 	return (str(node) in evens)

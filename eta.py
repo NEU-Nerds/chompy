@@ -63,35 +63,35 @@ def etaPrime(gP, lP, evens, pHandler):
 # if node has an even child returns 1, else 0
 def etaGraph(node, evens, pHandler):
 
-	#just in case outQ was added to twice
-	# print("in etaGraph")
-	while not pHandler.outQ.empty():
-		# print("emptying outQ")
-		pHandler.outQ.get()
-	# print("past emptying")
+	#just in case outQ was added to more than once simultaniously
+	print("\n\nin etaGraph")
+	pHandler.outQ = mp.Queue()
+	# while not pHandler.outQ.empty():
+	# 	# print("emptying outQ")
+	# 	pHandler.outQ.get()
+	print("past emptying")
 	bites = util.getChoices(node)
-	mirrors = []
 
 	#lock so eval process doesn't empty a not yet full Q
-	# print("getting lock")
+	print("getting lock")
 	pHandler.lock.acquire()
-	# print("aquired lock")
+	print("aquired lock")
 	# outQ = mp.Queue()
 	# print("Adding bites")
 	for bite in bites:
 		pHandler.add([node, bite, evens])
 	pHandler.lock.release()
-
+	print("released lock")
 	#wait till finished
 	pHandler.evalQ.join()
-	# print("past join")
+	print("past join")
 
 	if pHandler.outQ.empty():
-		# print("outQ was empty")
+		print("outQ was empty")
 		return 0
 	else:
 		ret = pHandler.outQ.get()
-		# print("ret: " + str(ret))
+		print("ret: " + str(ret))
 		if ret:
 			# print("There was an even")
 			return 1

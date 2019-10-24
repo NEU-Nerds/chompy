@@ -226,7 +226,7 @@ def seed():
 def profileIt():
 	seed()
 	main()
-	
+
 if __name__ == "__main__":
 	try:
 		os.mkdir(ETA_FOLDER)
