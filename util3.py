@@ -1,5 +1,6 @@
 import numpy as np
 import json
+import pickle
 """
 A mXn board is an array of ints with length m.
 The fist value must be exactly n.
@@ -23,7 +24,7 @@ def bite(b, pos):
 		if board[row] > pos[1]:
 			board[row] = pos[1];
 		else:
-			break;
+			break
 
 	# board = [r if r > pos[1] else r for r in b]
 
@@ -123,7 +124,7 @@ def getLPrime(board):
 
 def combineG_L(g, l):
 	#print("Combining g: " + str(g) + " and l: " + str(l))
-	node = g.copy()
+	node = g[:]
 	n = g[0] + 1
 
 	#print("g pre expansion: " + str(node))
@@ -162,17 +163,27 @@ def getChoices(board):
 def getMxNFileName(m, n):
 	return str(m) + "x" + str(n) + ".json"
 
-def load(fileName):
+def loadJson(fileName):
 	with open(fileName, "r") as file:
-		jData = file.read()
+		jData = file.read()+" "
+		jData = "[" + jData[1:-1]
 		data = json.loads(jData)
 		return data
 
-def store(data, fileName):
+def storeJson(data, fileName):
 	with open(fileName, "w") as file:
 		jData = json.dumps(data)
 		file.write(jData)
+		# file.write(str(data))
 		return 1
+
+def load(fileName):
+	with open (fileName, 'rb') as f:
+		return pickle.load(f)
+
+def store(data, fileName):
+	with open(fileName, 'wb') as f:
+		pickle.dump(data, f)
 
 def seed():
 	#{key:eta}
