@@ -8,12 +8,12 @@ import csv
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 #THIS_FOLDER = "D:/Mass Storage/Math/chompy"
 THIS_FOLDER = Path(THIS_FOLDER)
-DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc5/")
+DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc6/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
 
 
 
-MAX_SIZE = 11
+MAX_SIZE = 13
 
 def main():
 
@@ -214,5 +214,5 @@ if __name__ == "__main__":
 		os.mkdir(ETA_FOLDER)
 	except:
 		pass
-	#seed()
+	# seed()
 	main()
