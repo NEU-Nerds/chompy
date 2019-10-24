@@ -63,14 +63,17 @@ def getN(board):
 def toArrayNotation(b):
 	return [[0 if i < r else 1 for i in range(b[0])] for r in b]
 
+
 #the number of cols that have a bite taken out of it, if there are no bites, 0
 def file(board):
 	return board[0] - board[-1]
 
+# equals n - file
 def inverseFile(board):
 	return board[-1]
 
 #the first row that has a bite taken out of it, if there are no bites, 0
+#equals m - rank
 def inverseRank(board):
 	n = board[0]
 	for i in range(1, len(board)):
@@ -78,6 +81,7 @@ def inverseRank(board):
 			return i
 	return len(board)
 
+#the number of rows that have a bite taken out of it, if there are no bites, 0
 def rank(board):
 	return len(board) - inverseRank(board)
 
@@ -122,6 +126,7 @@ def getL(board, n):
 def getLPrime(board):
 	return [i for i in range(rank(board), getM(board))]
 
+#returns the node which = g+l
 def combineG_L(g, l):
 	#print("Combining g: " + str(g) + " and l: " + str(l))
 	node = g[:]
@@ -146,6 +151,7 @@ def combineG_L(g, l):
 	return node
 
 #not checking to see if lP is > inverseRank (means it's assuming l is an allowable l)
+#returns the node which = g'+l'
 def combineGP_LP(gP, lP):
 	node = gP.copy()
 	n = gP[0] + 1
