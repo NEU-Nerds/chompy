@@ -6,30 +6,33 @@ import ast
 
 #for square
 #G MUST BE SQUARE OR IT BREAK
+
+#returns 1 or 0 for odd or even respectively
 def eta(g, l, n, evens):
 	# print("\neta for g: "+str(g)+" l: "+str(l))
-	#rank(g) < n-1 and file(g) < n-1
-	#first part for if square
+
+	#if g is square and top row and left col are not bitten
 	if g[0] == len(g)  and util.rank(g) < n-1 and util.file(g) < n-1:
+
 		#if g = correct first move for a bite
-		# print("roughly square")
 		if g[0] == n-1 and ((len(g) == 1 and l[0] > 0) or (len(g) > 1 and g[1] == 1)):
 			# print("SQUARE bite detected for " + str(g))
+
+			#if l is doesn't bites bottom of left col or right of top row (means in a loosing square board position)
 			if l == (n-1, n-1):
 				return 0
-			elif l == (n, n-1):
+			#if l bites bottom of left col or right of top row (means can mirror by doing the oposite)
+			elif l == (n, n-1) or l == (n-1, n):
 				return 1
-			#because including mirrors for now
-			elif l == (n-1, n):
-				return 1
+
 			else:
-				# print("This should not have happend - eta case 1")
+				print("This should not have happend - eta case 1")
 				return 1
 		#bite at winning square move then calc remaining moves
 		else:
 			#if l doesn't extend into first col or top row
 			if l[0] < n and l[1] < n:
-				# print("returning here")
+				#bite at 1,1 and win
 				return 1
 			#turned into a rectangle board
 			#if l[1] = n then l[0] = n which isn't in L therefore this is for l[0] = n
@@ -40,17 +43,20 @@ def eta(g, l, n, evens):
 				#l[1] was util.getLPrime(g)
 				return etaPrime(g, l[1]-1, evens)
 	else:
-		#print("wants to be elsa")
+		#g not square so adjusting l[1] to match
 		return etaPrime(g, l[1]-(n-len(g)), evens)
 
 #for not square, only called by eta
 def etaPrime(gP, lP, evens):
 	# print("etaPrime gP: " + str(gP)+"\tlP: " + str(lP))
+	#if g is even then just play top right
 	if inEvens(gP, evens):
 		return 1
-	#maybe pass in?
+	#maybe pass in? - the combined node
 	N = util.combineGP_LP(gP, lP)
 	# print("\netaPrime N: "+str(N))
+
+	#relying on graph children logic
 	return etaGraph(N, evens)
 
 #@profile
