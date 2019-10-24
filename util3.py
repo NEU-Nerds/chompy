@@ -69,7 +69,7 @@ def file(board):
 def inverseFile(board):
 	return board[-1]
 
-#the first row that has a bite taken out of it, if there are no bites, 0
+#the number of empty squares in the last column, if there are no bites, 0
 def inverseRank(board):
 	n = board[0]
 	for i in range(1, len(board)):
@@ -187,7 +187,6 @@ def mirror(board):
 	# [ for i in range(len(board))]
 	mirrored = [0] * board[0] #initialize the mirrored rectangular board
 	for i in range(board[0]):
-		mirrored[i] = 0
 		for j in range(len(board)):
 			if board[j] > i:
 				mirrored[i] += 1
