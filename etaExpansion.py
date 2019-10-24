@@ -22,7 +22,7 @@ def main():
 	n_evens = util.load(DATA_FOLDER / "n&evens.dat")
 	startN = n_evens[0]
 	#evens is a set of the string representation of all even nodes
-	evens = set(n_evens[1])
+	evens = n_evens[1]
 	print("Loaded")
 
 	timeBeginExpand = time.time()
@@ -50,6 +50,14 @@ def main():
 
 
 def expandLCentric(n, evens):
+	#expand evens
+	for row in evens:
+		row.append(set([]))
+	evens.append([])
+	for i in range(n+1):
+		evens[-1].append(set([]))
+
+
 	#directory of n-1 X n-1 data
 	prevDir = ETA_FOLDER / (str(n-1)+"X"+str(n-1))
 	#the to be directory of nXn data
@@ -175,17 +183,16 @@ def etaLG(l, g, n, evens):
 
 	#if the node is even updated evens with node and mirror of node
 	if num % 2 == 0:
-		evens.add(str(node))
+		evens[util.inverseRank(node)][util.inverseFile(node)].add(str(node))
 		#if len(node) == node[0] and util.file(node) > util.rank(node):
-		evens.add(str(util.mirror(node)))
+		mir = util.mirror(node)
+		evens[util.inverseRank(mir)][util.inverseFile(mir)].add(str(mir))
 	return [node, num]
 
 
 def seed():
 	print("Seeding")
-	o_o = [[[1],0]]
 
-	evens = [str([1])]
 
 	try:
 		os.mkdir(ETA_FOLDER / "1X1/")
@@ -200,7 +207,9 @@ def seed():
 	except:
 		pass
 
-	util.store(o_o, ETA_FOLDER / "1X1/invF=1_invR=1/0.dat")
+	# evens = [str([1])]
+	evens = [ [set([]), set([])], [set([]), set([str([1])])] ]
+	util.store([[[1],0]], ETA_FOLDER / "1X1/invF=1_invR=1/0.dat")
 	util.store([], ETA_FOLDER / "1X1/invF=0_invR=0/0.dat")
 	util.store((1,evens), DATA_FOLDER / "n&evens.dat")
 	print("Seeded")
