@@ -28,4 +28,4 @@ DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc4/")
 # data = util.load(DATA_FOLDER / "etaData/4X4/invF=1_invR=2.dat")
 # print(data)
 
-print(etaE.getConcurrentLs((7,1)))
+print(etaE.getSubLs((7,3)))

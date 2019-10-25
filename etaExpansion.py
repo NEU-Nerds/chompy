@@ -13,6 +13,7 @@ THIS_FOLDER = Path(THIS_FOLDER)
 DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc6/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
 THREADS = 6
+MAX_DEPTH = 4
 
 P_HANDLER = None
 
@@ -172,8 +173,7 @@ def eval(q, outQ):
 
 		q.task_done()
 
-def inEvens(node, evens):
-	return (str(node) in evens)
+
 
 def workL(l, n, evens, newDir, prevDir):
 
@@ -299,6 +299,9 @@ def etaLG(l, g, n, evens):
 		newEvens.append(str(util.mirror(node)))
 	return ([node, num], newEvens)
 
+def inEvens(node, evens):
+	return (str(node) in evens)
+	
 #returns a list of l's that can be evaled concurrently
 #means that one component of l is less and the other is greator
 #neither can generate a direct parent or child to what the other can gen
@@ -307,6 +310,35 @@ def getConcurrentLs(l):
 	for i in range(int( (l[0]-l[1])/2 ) +1 ):
 		# print(i)
 		L.append((l[0]-i, l[1]+i))
+	return L
+
+#get list of concurrent ls with l where l[1] <= lim
+def getConcurrentLsLimited(l, lim):
+	L = []
+	for i in range(int( (l[0]-l[1])/2 ) +1 ):
+		# print(i)
+		if l[1] + i > lim:
+			break
+		L.append((l[0]-i, l[1]+i))
+	return L
+
+#get a list of lists of l's less then l that can be evalled conccurently
+def getSubLs(l):
+	L = []
+	# print("first")
+	for i in reversed(range(1, l[1])):
+		# print("l: " + str(l))
+		# print("i: " + str(i))
+		# print("core l: " + str((l[0]-1,i)))
+		levelL = getConcurrentLsLimited((l[0]-1,i),l[1]-1)
+		# print("levelL: " + str(levelL))
+		L.append(levelL)
+	# print("\n\nsecond")
+	for i in reversed(range(1, l[0]-1)):
+		print(str((i,1)))
+		levelL = getConcurrentLsLimited((i,1),l[1]-1)
+		L.append(levelL)
+	L.append([(0,0)])
 	return L
 
 def seed():
