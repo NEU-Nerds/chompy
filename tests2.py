@@ -1,5 +1,6 @@
 import util3 as util
 import eta
+import etaExpansion as etaE
 from pathlib import Path
 import os
 
@@ -24,5 +25,7 @@ DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc4/")
 # 	print(data[i])
 # # print(data[0])
 
-data = util.load(DATA_FOLDER / "etaData/4X4/invF=1_invR=2.dat")
-print(data)
+# data = util.load(DATA_FOLDER / "etaData/4X4/invF=1_invR=2.dat")
+# print(data)
+
+print(etaE.getConcurrentLs((7,1)))
