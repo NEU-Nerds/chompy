@@ -5,7 +5,7 @@ from pathlib import Path
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 #THIS_FOLDER = "D:/Mass Storage/Math/chompy"
-DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc5/")
+DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc6/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
 #etaData = util.load(DATA_FOLDER / "etaData.dat")
 

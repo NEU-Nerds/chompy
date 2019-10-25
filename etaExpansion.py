@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 import time
 import csv
-import multiP
+import multiprocessing as mp
+# import multiP
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 #THIS_FOLDER = "D:/Mass Storage/Math/chompy"
@@ -13,7 +14,7 @@ DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc6/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
 THREADS = 6
 
-P_HANDLER = mp.etaMultiHandler(THREADS)
+P_HANDLER = None
 
 MAX_SIZE = 13
 
@@ -26,6 +27,8 @@ def main():
 	#evens is a set of the string representation of all even nodes
 	evens = n_evens[1]
 	print("Loaded")
+
+	P_HANDLER = etaMultiHandler(THREADS)
 
 	timeBeginExpand = time.time()
 	timeStart = timeBeginExpand
@@ -51,7 +54,11 @@ def main():
 			print("Time for " + str(n)+"X"+str(n) + ": " + str(timeEnd-timeStart))
 
 
+
+
 def expandLCentric(n, evens):
+
+
 
 	#directory of n-1 X n-1 data
 	prevDir = ETA_FOLDER / (str(n-1)+"X"+str(n-1))
@@ -76,36 +83,104 @@ def expandLCentric(n, evens):
 	L.append((0,0))
 	"""
 	L = []
-	for i in reversed(range(n)):
+	for i in reversed(range(1,n)):
 		L.append(getConcurrentLs((n,i)))
+	for i in reversed(range(1,n)):
+		L.append(getConcurrentLs((i,1)))
+	L.append([[0,0]])
 
+	# print("L: " + str(L))
 
 	for lClass in L:
+		# print("\n\nlClass: " + str(lClass))
 		#add all l's to a Queue
 		#.join that Queue
 		#read new evens from outQ
 		#update evens
 
 		for l in lClass:
-			P_HANDLER.add(l)
+			# print("Adding l: " + str(l))
+			P_HANDLER.add((l, n , evens, newDir, prevDir))
 
 		#wait untill all l's are evalled
 		P_HANDLER.evalQ.join()
 
+		#get a list of all new even lists from outQ
 		newEvenSets = P_HANDLER.getOut()
+		#add them to evens
+		# print("\n\nnewEvenSets: " + str(newEvenSets)+"\n")
+		for evenSet in newEvenSets:
+			for item in evenSet:
+				# print("Adding to evens: " + item)
+				evens.add(item)
+
+		# print("newEvens: " + str(evens))
+
 
 
 
 
 	#storing the list of evens and the finished n size
-	util.store([n, list(evens)], DATA_FOLDER / "n&evens.dat")
+	util.store([n, evens], DATA_FOLDER / "n&evens.dat")
 	#returning evens so it can be passed in again from main
 	return evens
 
-def workL(l, n, evens):
+class etaMultiHandler:
+	evalQ = None
+	outQ = None
+	processes = None
+
+
+	def __init__(self, threads = 6):
+		self.evalQ = mp.JoinableQueue()
+		self.outQ = mp.Queue()
+
+		self.processes = [mp.Process(target=eval, args=(self.evalQ, self.outQ), daemon=True) for i in range(threads)]
+		for p in self.processes:
+			p.start()
+
+	#item = [node, bite, evens]
+	def add(self, item):
+		self.evalQ.put(item)
+
+	def getOut(self):
+		ret = []
+		while not self.outQ.empty():
+			ret.append(self.outQ.get())
+		return ret
+
+	def terminate(self):
+		for p in self.processes:
+			p.terminate()
+
+def eval(q, outQ):
+	while True:
+		#will hold till and item is got
+		item = q.get()
+
+		# if item is None:
+		# 	print("item was none")
+		# 	time.sleep(0.001)
+		# 	continue
+		l = item[0]
+		n = item[1]
+		evens = item[2]
+		newDir = item[3]
+		prevDir = item[4]
+
+		outQ.put(workL(l, n, evens, newDir, prevDir))
+
+		q.task_done()
+
+def inEvens(node, evens):
+	return (str(node) in evens)
+
+def workL(l, n, evens, newDir, prevDir):
 
 	#newEtaData is a list of newly processed nodes, kept up til 1 million then written to disk
 	newEtaData = []
+	#newEvens is a list of the str of new even nodes
+	newEvens = []
 	#the number of files written to disk already, incremented each time one is
 	fileCount = 0
 
@@ -139,7 +214,7 @@ def workL(l, n, evens):
 				#g[0] = node fro g in G
 				#g[1] = that node's eta
 				G = util.load(prevSubDir / (str(i)+".dat"))
-
+				# print("G: " + str(G))
 				#getting mirrors of each g when neccesary since they aren't stored
 				newG = []
 				for g in G:
@@ -163,7 +238,11 @@ def workL(l, n, evens):
 					ret = etaLG(l, g[0], n, evens)
 					#if the combined node didn't have any negatives in it (we should fix the root problem of this)
 					if ret:
-						newEtaData.append(ret)
+						newEtaData.append(ret[0])
+						# newEvens += ret[1]
+						for item in ret[1]:
+							evens.add(item)
+							newEvens.append(item)
 
 					del g
 					del ret
@@ -184,11 +263,22 @@ def workL(l, n, evens):
 
 	#adding g = empty prev board which is not done in the for loop above
 	g = [n-1]*(n-1)
-	newEtaData.append(etaLG(l, g, n, evens))
+	ret = etaLG(l, g, n, evens)
+
+
+	newEtaData.append(ret[0])
+	# newEvens += ret[1]
+	for item in ret[1]:
+		evens.add(item)
+		newEvens.append(item)
+
 
 	#storing whatever is left for this l
+	# print("Storing: " + str(newEtaData))
 	util.store(newEtaData, thisDir / (str(fileCount)+".dat") )
 	del newEtaData
+
+	return newEvens
 
 #gets the eta value of node=l+g and returns [node, eta]
 #returns None if the board was invalid for having a negative in it (why is this happeing?)
@@ -199,12 +289,15 @@ def etaLG(l, g, n, evens):
 		return None
 	num = eta.eta(g, l, n, evens)
 
-	#if the node is even updated evens with node and mirror of node
+	#if the node is even add it to newEvens
+	newEvens = []
 	if num % 2 == 0:
-		evens.add(str(node))
-		#if len(node) == node[0] and util.file(node) > util.rank(node):
-		evens.add(str(util.mirror(node)))
-	return [node, num]
+
+		newEvens.append(str(node))
+		# if len(node) == node[0] and util.file(node) > util.rank(node):
+		# print("Adding mirror " + str(util.mirror(node)))
+		newEvens.append(str(util.mirror(node)))
+	return ([node, num], newEvens)
 
 #returns a list of l's that can be evaled concurrently
 #means that one component of l is less and the other is greator
@@ -212,7 +305,7 @@ def etaLG(l, g, n, evens):
 def getConcurrentLs(l):
 	L = []
 	for i in range(int( (l[0]-l[1])/2 ) +1 ):
-		print(i)
+		# print(i)
 		L.append((l[0]-i, l[1]+i))
 	return L
 
@@ -243,6 +336,8 @@ def seed():
 def profileIt():
 	seed()
 	main()
+
+P_HANDLER = etaMultiHandler(THREADS)
 
 if __name__ == "__main__":
 	try:

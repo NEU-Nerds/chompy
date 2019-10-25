@@ -54,7 +54,7 @@ def etaPrime(gP, lP, evens):
 		return 1
 	#maybe pass in? - the combined node
 	N = util.combineGP_LP(gP, lP)
-	# print("\netaPrime N: "+str(N))
+	# print("etaPrime N: "+str(N))
 
 	#relying on graph children logic
 	return etaGraph(N, evens)
@@ -73,13 +73,15 @@ def etaGraph(node, evens):
 			# print("Even child: " + str(child))
 			return 1
 		else:
-			#print("Odd child: " + str(child))
+		# 	#print("Odd child: " + str(child))
 			mirrors.append(child)
 		# elif inEvens(util.mirror(child), evens):
 			# return 1
 	for mirror in mirrors:
 		if inEvens(util.mirror(mirror), evens):
+			# print("Even child: " + str(util.mirror(mirror)))
 			return 1
+	# print("returning even")
 	return 0
 
 def inEvens(node, evens):

@@ -65,6 +65,7 @@ def toArrayNotation(b):
 
 #the number of cols that have a bite taken out of it, if there are no bites, 0
 def file(board):
+	# print("board: " + str(board))
 	return board[0] - board[-1]
 
 def inverseFile(board):
