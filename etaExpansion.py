@@ -20,6 +20,8 @@ P_HANDLER = None
 MAX_SIZE = 11
 
 def main():
+	global P_HANDLER
+	P_HANDLER = etaMultiHandler(THREADS)
 
 	print("Loading Initial Data")
 	#etaData = util.load(DATA_FOLDER / "etaData.dat")
@@ -55,11 +57,11 @@ def main():
 			print("Time for " + str(n)+"X"+str(n) + ": " + str(timeEnd-timeStart))
 
 
-
-
 def expandLCentric(n, evens):
-
-
+	print("joining storeQ")
+	P_HANDLER.storeQ.join()
+	print("past join")
+	P_HANDLER.storeQ.put(n)
 
 	#directory of n-1 X n-1 data
 	prevDir = ETA_FOLDER / (str(n-1)+"X"+str(n-1))
@@ -153,18 +155,26 @@ class etaMultiHandler:
 	outQ = None
 	processes = None
 
+	storeQ = None
+	storeProcess = None
 
 	def __init__(self, threads = 6):
 		self.evalQ = mp.JoinableQueue()
 		self.outQ = mp.Queue()
+		self.storeQ = mp.JoinableQueue()
 
-		self.processes = [mp.Process(target=eval, args=(self.evalQ, self.outQ), daemon=True) for i in range(threads)]
+		self.processes = [mp.Process(target=eval, args=(self.evalQ, self.outQ, self.storeQ), daemon=True) for i in range(threads)]
+		self.storeProcess = mp.Process(target=storeThred, args=(self.storeQ,), daemon=False)
 		for p in self.processes:
 			p.start()
-
+		self.storeProcess.start()
 	#item = [node, bite, evens]
 	def add(self, item):
 		self.evalQ.put(item)
+
+	#item = n or (newEtaData, (invF, invR))
+	def store(self, item):
+		self.storeQ.put(item)
 
 	def getOut(self):
 		ret = []
@@ -175,8 +185,10 @@ class etaMultiHandler:
 	def terminate(self):
 		for p in self.processes:
 			p.terminate()
+		self.storeQ.join()
+		self.storeProcess.terminate()
 
-def eval(q, outQ):
+def eval(q, outQ, storeQ):
 	while True:
 		#will hold till and item is got
 		item = q.get()
@@ -189,21 +201,76 @@ def eval(q, outQ):
 		n = item[1]
 		evens = item[2]
 
-		outQ.put(workL(l, n, evens))
+		outQ.put(workL(l, n, evens, storeQ))
 
 		q.task_done()
+
+def storeThred(q):
+	newDir = ETA_FOLDER / (str(2)+"X"+str(2))
+	# {frKey((inverseFile, inverseRank)) : (newEtaData, fileCount)
+	frDict = {}
+	#thisDir = newDir / ("invF="+str(n-lSet[0][0])+"_invR="+str(n-lSet[0][1]))
+	while True:
+		item = q.get()
+		# print("Got store item")
+		#if int gotten, open new nXn directory
+		if type(item) is int:
+			newDir = ETA_FOLDER / (str(item)+"X"+str(item))
+			#create the new directory
+			try:
+				os.mkdir(newDir)
+			except:
+				#means it's already there
+				pass
+
+			#store remaining items from previous nxn
+			for key in frDict.keys():
+				thisDir = newDir / key
+				# try:
+				# 	os.mkdir(thisDir)
+				# except:
+				# 	#means it's already there
+				# 	pass
+				util.store(frDict[key][0], thisDir / (str(frDict[key][1])+".dat") )
+			#reset dict
+			frDict = {}
+		else:
+			#item = (newEtaData, (f, r))
+			key = frKey(item[1])
+			#add newEtaData to dict
+			if key in frDict.keys():
+				frDict[key] = (frDict[key][0] + item[0], frDict[key][1])
+			else:
+				frDict[key] = (item[0], 0)
+			#number of states to store in one file
+			numToStore = 1000000
+			#cut off first 1mil and store that then incriment file count and put remaing back into dict
+			if len(frDict[key]) >= numToStore:
+				toStore = frDict[key][:numToStore]
+				remaining = frDict[key][numToStore:]
+				util.store(toStore, thisDir / (str(frDict[key][1])+".dat"))
+				frDict[key][0] = remaining
+				frDict[key][1] = frDict[key][1] + 1
+		# print("finished store item")
+		q.task_done()
+
+
+
+def frKey(fr):
+	return ("invF="+str(fr[0])+"_invR="+str(fr[1]))
 
 
 def getNDir(n):
 	return ETA_FOLDER / (str(n)+"X"+str(n))
 
-def workL(lSet, n, evens):
-	print("lSet: " + str(lSet))
+def workL(lSet, n, evens, storeQ):
+	# global P_HANDLER
+	# print("lSet: " + str(lSet))
 
 	#directory of n-1 X n-1 data
 	# prevDir = ETA_FOLDER / (str(n-1)+"X"+str(n-1))
 	#the to be directory of nXn data
-	newDir = getNDir(n)
+	# newDir = getNDir(n)
 
 
 	#newEtaData is a list of newly processed nodes, kept up til 1 million then written to disk
@@ -211,28 +278,28 @@ def workL(lSet, n, evens):
 	#newEvens is a list of the str of new even nodes
 	newEvens = []
 	#the number of files written to disk already, incremented each time one is
-	fileCount = 0
+	# fileCount = 0
 
 	#file >= rank
 	#MUST DO INVERSE FILE AND RANK BECAUSE SOME BOARDS ARE NOT SQUARE
 	#the output directory for this l
-	thisDir = newDir / ("invF="+str(n-lSet[0][0])+"_invR="+str(n-lSet[0][1]))
-	try:
-		os.mkdir(thisDir)
-	except:
-		#means it's already there
-		pass
+	# thisDir = newDir / ("invF="+str(n-lSet[0][0])+"_invR="+str(n-lSet[0][1]))
+	# try:
+	# 	os.mkdir(thisDir)
+	# except:
+	# 	#means it's already there
+	# 	pass
 
 
 
 	bl = lSet[-1]
 	newN = n - (len(lSet)-1)
-	print("bl: " + str(bl))
-	print("n: " + str(n))
+	# print("bl: " + str(bl))
+	# print("n: " + str(n))
 	#inverse file of g's to be loaded
 	#must be at least inverse file of l (same with rank)
 	for f in range(newN-bl[0], newN-1):
-		print("f: " + str(f))
+		# print("f: " + str(f))
 		#inverse rank of g's to be loaded
 		#inverse rank >= inverse file (but not n-1)
 		for r in range(max(newN-bl[1], f), newN-1):
@@ -262,15 +329,17 @@ def workL(lSet, n, evens):
 						newG.append([util.mirror(g[0]), g[1]])
 
 				smallG += newG
+
 				#just to remove the referense for garbage collection (don't know if this matters)
 				del newG
 
-				print("smallG: " +str(smallG))
+				# print("smallG: " +str(smallG))
 
 				G = []
 				for g in smallG:
 
 					for l in reversed(lSet[1:]):
+						# print("g: " + str(g) + "\tl: " + str(l))
 						g = util.combineG_L(g, l)
 					G.append(g)
 
@@ -284,6 +353,7 @@ def workL(lSet, n, evens):
 					ret = etaLG(l, g[0], n, evens)
 					#if the combined node didn't have any negatives in it (we should fix the root problem of this)
 					if ret:
+						# print("ret: " + str(ret))
 						newEtaData.append(ret[0])
 						# newEvens += ret[1]
 						for item in ret[1]:
@@ -299,9 +369,11 @@ def workL(lSet, n, evens):
 
 						#store in a sorted order(don't think this is actually necessary but batching may change)
 						newEtaData.sort(key = lambda x: sum(x[0]))
-						util.store(newEtaData, thisDir / (str(fileCount)+".dat"))
+						# util.store(newEtaData, thisDir / (str(fileCount)+".dat"))
+						print("Storing: " + str(newEtaData))
+						storeQ.put((newEtaData, (n-lSet[0][0], n-lSet[0][1])))
 						#incriment file count
-						fileCount += 1
+						# fileCount += 1
 						#making sure garbage collection works - not sure if we need this
 						del newEtaData
 						newEtaData = []
@@ -321,7 +393,9 @@ def workL(lSet, n, evens):
 
 	#storing whatever is left for this l
 	# print("Storing: " + str(newEtaData))
-	util.store(newEtaData, thisDir / (str(fileCount)+".dat") )
+	# util.store(newEtaData, thisDir / (str(fileCount)+".dat") )
+	print("Storing: " + str(newEtaData))
+	storeQ.put((newEtaData, (n-lSet[0][0], n-lSet[0][1])))
 	del newEtaData
 
 	return newEvens
@@ -415,9 +489,10 @@ def profileIt():
 	seed()
 	main()
 
-P_HANDLER = etaMultiHandler(THREADS)
+
 
 if __name__ == "__main__":
+
 	try:
 		os.mkdir(ETA_FOLDER)
 	except:
