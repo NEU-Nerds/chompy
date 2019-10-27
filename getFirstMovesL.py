@@ -14,7 +14,7 @@ ETA_FOLDER = DATA_FOLDER / "etaData/"
 
 #print(util.file([3]))
 
-n = 13
+n = 3
 """
 etaData = {}
 for i in range (1,n+1):
@@ -83,4 +83,4 @@ for i in range(2,n+1):
 		firstMoves[str(i)+"X"+str(j)] = fms
 		if len(fms) > 1:
 			print("Length of "+ str(i)+"X"+str(j)+" fms is " + str(len(fms)))
-util.storeJson(firstMoves, DATA_FOLDER / "firstMovesV3-5_16.json")
+util.storeJson(firstMoves, DATA_FOLDER / "firstMovesV3-5_testing.json")

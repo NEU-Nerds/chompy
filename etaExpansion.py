@@ -12,12 +12,12 @@ THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 THIS_FOLDER = Path(THIS_FOLDER)
 DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc6/")
 ETA_FOLDER = DATA_FOLDER / "etaData/"
-THREADS = 6
+THREADS = 1
 MAX_DEPTH = 4
 
 P_HANDLER = None
 
-MAX_SIZE = 13
+MAX_SIZE = 11
 
 def main():
 
@@ -83,25 +83,47 @@ def expandLCentric(n, evens):
 	#only for empty board
 	L.append((0,0))
 	"""
-	L = []
-	for i in reversed(range(1,n)):
-		L.append(getConcurrentLs((n,i)))
-	for i in reversed(range(1,n)):
-		L.append(getConcurrentLs((i,1)))
-	L.append([[0,0]])
+	# finalLs = []
 
-	# print("L: " + str(L))
+	baseL = []
+	for i in reversed(range(1,n)):
+		baseL.append(getConcurrentLs((n,i)))
+	for i in reversed(range(1,n)):
+		baseL.append(getConcurrentLs((i,1)))
+	baseL.append([[0,0]])
 
-	for lClass in L:
+	print("baseL: " + str(baseL))
+
+	for baselClass in baseL:
 		# print("\n\nlClass: " + str(lClass))
 		#add all l's to a Queue
 		#.join that Queue
 		#read new evens from outQ
 		#update evens
+		print("\nbaselClass: " + str(baselClass))
+		newLs = []
+		for l in baselClass:
+			print("l: " + str(l))
+			subL = getSubLs(l)
+			print("subL: " + str(subL))
+			if len(subL) == 0:
+				newLs.append([l])
+			else:
+				for sl in subL:
+					newL = [l]
+					for newl in sl:
+						newL.append(newl)
+					newLs.append(newL)
 
-		for l in lClass:
-			# print("Adding l: " + str(l))
-			P_HANDLER.add((l, n , evens, newDir, prevDir))
+
+		print("newLs: " + str(newLs))
+
+		# for l in lClass:
+		# 	# print("Adding l: " + str(l))
+		# 	P_HANDLER.add((l, n , evens, newDir, prevDir))
+
+		for lset in newLs:
+			P_HANDLER.add((lset, n , evens))
 
 		#wait untill all l's are evalled
 		P_HANDLER.evalQ.join()
@@ -166,16 +188,23 @@ def eval(q, outQ):
 		l = item[0]
 		n = item[1]
 		evens = item[2]
-		newDir = item[3]
-		prevDir = item[4]
 
-		outQ.put(workL(l, n, evens, newDir, prevDir))
+		outQ.put(workL(l, n, evens))
 
 		q.task_done()
 
 
+def getNDir(n):
+	return ETA_FOLDER / (str(n)+"X"+str(n))
 
-def workL(l, n, evens, newDir, prevDir):
+def workL(lSet, n, evens):
+	print("lSet: " + str(lSet))
+
+	#directory of n-1 X n-1 data
+	# prevDir = ETA_FOLDER / (str(n-1)+"X"+str(n-1))
+	#the to be directory of nXn data
+	newDir = getNDir(n)
+
 
 	#newEtaData is a list of newly processed nodes, kept up til 1 million then written to disk
 	newEtaData = []
@@ -187,22 +216,29 @@ def workL(l, n, evens, newDir, prevDir):
 	#file >= rank
 	#MUST DO INVERSE FILE AND RANK BECAUSE SOME BOARDS ARE NOT SQUARE
 	#the output directory for this l
-	thisDir = newDir / ("invF="+str(n-l[0])+"_invR="+str(n-l[1]))
+	thisDir = newDir / ("invF="+str(n-lSet[0][0])+"_invR="+str(n-lSet[0][1]))
 	try:
 		os.mkdir(thisDir)
 	except:
 		#means it's already there
 		pass
 
+
+
+	bl = lSet[-1]
+	newN = n - (len(lSet)-1)
+	print("bl: " + str(bl))
+	print("n: " + str(n))
 	#inverse file of g's to be loaded
 	#must be at least inverse file of l (same with rank)
-	for f in range(n-l[0],n-1):
+	for f in range(newN-bl[0], newN-1):
+		print("f: " + str(f))
 		#inverse rank of g's to be loaded
 		#inverse rank >= inverse file (but not n-1)
-		for r in range(max(n-l[1], f), n-1):
-
+		for r in range(max(newN-bl[1], f), newN-1):
+			print("f: " + str(f) + "\tr: " + str(r))
 			#the subdir where to find the sepcific r and f g's
-			prevSubDir = prevDir / ("invF="+str(f)+"_invR="+str(r))
+			prevSubDir = getNDir(n-len(lSet)) / ("invF="+str(f)+"_invR="+str(r))
 
 
 			#Assuming all files in the dir are our .dat files
@@ -213,22 +249,32 @@ def workL(l, n, evens, newDir, prevDir):
 				#G = list of [node, eta#] pairs
 				#g[0] = node fro g in G
 				#g[1] = that node's eta
-				G = util.load(prevSubDir / (str(i)+".dat"))
+				smallG = util.load(prevSubDir / (str(i)+".dat"))
 				# print("G: " + str(G))
 				#getting mirrors of each g when neccesary since they aren't stored
 				newG = []
-				for g in G:
+				for g in smallG:
 					gF = util.file(g[0])
 					gR = util.rank(g[0])
 
 					#check if mirror would have rank and file compatable with l
-					if gF < l[1] and gR < l[0] and gF != gR:
+					if gF < bl[1] and gR < bl[0] and gF != gR:
 						newG.append([util.mirror(g[0]), g[1]])
 
-				G += newG
+				smallG += newG
 				#just to remove the referense for garbage collection (don't know if this matters)
 				del newG
 
+				print("smallG: " +str(smallG))
+
+				G = []
+				for g in smallG:
+
+					for l in reversed(lSet[1:]):
+						g = util.combineG_L(g, l)
+					G.append(g)
+
+				print("G: " + str(G))
 				#sorting by num choices (least choices first) => earlier nodes don't rely on
 				#later nodes as children in etaGraph
 				G.sort(key = lambda x: sum(x[0]))
@@ -263,7 +309,7 @@ def workL(l, n, evens, newDir, prevDir):
 
 	#adding g = empty prev board which is not done in the for loop above
 	g = [n-1]*(n-1)
-	ret = etaLG(l, g, n, evens)
+	ret = etaLG(lSet[0], g, n, evens)
 
 
 	newEtaData.append(ret[0])
@@ -301,7 +347,7 @@ def etaLG(l, g, n, evens):
 
 def inEvens(node, evens):
 	return (str(node) in evens)
-	
+
 #returns a list of l's that can be evaled concurrently
 #means that one component of l is less and the other is greator
 #neither can generate a direct parent or child to what the other can gen
@@ -338,7 +384,7 @@ def getSubLs(l):
 		print(str((i,1)))
 		levelL = getConcurrentLsLimited((i,1),l[1]-1)
 		L.append(levelL)
-	L.append([(0,0)])
+	# L.append([(0,0)])
 	return L
 
 def seed():
