@@ -10,7 +10,7 @@ THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 DATA_FOLDER = Path(THIS_FOLDER, "./data/epoc1/solved/")
 ANALYSIS_FOLDER = Path(THIS_FOLDER, "./data/analysis/")
 
-maxGen = 30
+maxGen = 45
 
 def seed3xN():
 	global maxGen
@@ -105,6 +105,8 @@ def main():
 
 	# d = pts[ptNumber][0][0] + pts[ptNumber][0][1]
 
+	evens = []
+
 	for node in nodes.items():
 		n = node[1][0]
 		eta = node[1][1]
@@ -129,6 +131,7 @@ def main():
 			# elif not flag:
 			# 	appendPt(n, nI)
 			appendPt(n, nE)
+			evens.append(n)
 		else:
 			flag = False
 			if len(n) < 2:
@@ -161,12 +164,12 @@ def main():
 	ax.set_zlabel("Z")
 
 	l = np.linspace(0, maxGen, 100)
-	for pt in pts:
-		# print("Num Points: " + str(pt[1]))
-		xs = np.linspace(pt[0][0], maxGen, 100)
-		diff = pt[0][1] - pt[0][0]
-		plt.plot(xs, xs + diff, pt[0][2])
-		drawChildrenLines(pt[0], ax)
+	# for pt in pts:
+	# 	# print("Num Points: " + str(pt[1]))
+	# 	xs = np.linspace(pt[0][0], maxGen, 100)
+	# 	diff = pt[0][1] - pt[0][0]
+	# 	plt.plot(xs, xs + diff, pt[0][2])
+	# 	drawChildrenLines(pt[0], ax)
 
 	# print(len(nB[0]))
 
@@ -178,12 +181,16 @@ def main():
 	# drawChildrenLines(pt, ax)
 	# pt = [26, 19, 11]
 	# drawChildrenLines(pt, ax)
-
-
 	# pt = [18, 12, 9]
 	# drawChildrenLines(pt, ax)
 
-	# ax.can_pan(true)
+	#x = y = z
+	xs = np.linspace(0, 10, 100)
+	plt.plot(xs, xs, xs)
+
+	util.store(evens, ANALYSIS_FOLDER / "3xNevens.json")
+
+	print(len(evens))
 
 	plt.show()
 

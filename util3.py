@@ -205,6 +205,74 @@ def fromArr(arr):
 		b.append(n)
 	return b
 
+# returns the parents of a given node at the same tree depth (don't add the tails), as a set of Inverse Row File
+# pass in previous width, change in width, and the node (in IRF)
+def getParents (pM, dM, evenNode):
+	parents = set() # stores all generated parents of the even node, eventually returned
+	lastAdded = set() # used to store things between depths for layer equivalence stuff
+	layerEq = layerEquivalence(evenNode)
+
+	# go through each index of the node
+	for d in range(len(evenNode)):
+		# finding the range of numbers that can be parents
+			# set "start" and "stop" depending on the depth
+				# start at the max of 1 greater than the current width or 1 more than the int at current depth
+			# if depth is 0:
+				# stop at the next width + 1
+			# if depth is not 0:
+				# stop at the max of (start or int at previous depth +1)
+
+		start = max(pM + 1, evenNode[d] + 1)
+		stop = pM + dM + 1
+		if d != 0:
+			# start = min(evenNode[d] + 1, pM + 1)
+			stop = max(evenNode[d-1] + 1, start)
+
+		# the value of the parent at any depth must be greater than or equal to the value of the child at any depth
+		 	# this is why we start is set to be evenNode[d] + 1.
+			# we add in the max of that and previous width so we don't have to
+				# generate the parents of the even board that have already been generated
+		# the upper limit is different depending on whether depth is 0 or not 0.
+			# if depth is 0, the upper limit is simply the new width (+ 1 so it's inclusive)
+			# if depth is not 0, the upper limit should be the previous depth's value (+1 for inclusive)
+				# however if that is less than the value of start, we don't want to do anything at this depth
+				# so we use the max() with start. eg: "for i in range(foo, foo)" does nothing
+
+		# see if the last layer is the same as this layer
+		if layerEq[d]:
+			toAdd = set() # new parents to be added to the overall list later
+			for parent in lastAdded: # go through all of the parents from the previous layer(s)
+				# add new parents based off of the current parent for every possible value
+				# the new parents can be from the value of the current depth to the value of previous depth
+				for i in range(parent[d], parent[d-1] + 1):
+					p = list(parent[:])
+					p[d] = i
+					toAdd.add(tuple(p))
+			lastAdded.update(toAdd)
+		else:
+			parents.update(lastAdded) # add the parents from last added to the list of parents
+			lastAdded = set() # reset lastAdded because the layers are different
+
+		# setting the nodes in the range of previously generated numbers as parents
+		for i in range(start, stop):
+			# casting to list from tuple so you can change the value at the current depth
+			p = list(evenNode[:]) # copy the current node
+			p[d] = i #change the value at current depth
+			lastAdded.add(tuple(p))
+		parents.update(lastAdded)
+
+	return parents
+
+# pass in a path representing a node.
+# returns a list of bools with the same length
+# the bool at each index represents whether the int at the index - 1 and the index are the same
+# index 0 is always false
+def layerEquivalence(path):
+		layerEq = [False] * len(path)
+		for i in range(1, len(path)):
+			layerEq[i] = path[i] == path[i-1]
+		return layerEq
+
 #can you get from b to c with only 1 bite(b is parent)
 def isDirectChild(b, c):
 	hasDelta = False#has the value of at least one previous row changed
